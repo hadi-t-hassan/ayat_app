@@ -98,7 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username: userData.username,
       };
 
-      const profile: Profile = {
+      // Handle case where profile is null
+      const profile: Profile = profileData ? {
         id: profileData.id.toString(),
         name: profileData.name || `${userData.first_name} ${userData.last_name}`,
         username: profileData.username,
@@ -107,6 +108,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         permissions: userData.permissions || {},
         created_at: profileData.created_at,
         updated_at: profileData.updated_at,
+      } : {
+        id: userData.id.toString(),
+        name: `${userData.first_name} ${userData.last_name}`.trim() || userData.username,
+        username: userData.username,
+        role: userData.role || 'user',
+        user_id: userData.id.toString(),
+        permissions: userData.permissions || {},
+        created_at: userData.created_at || new Date().toISOString(),
+        updated_at: userData.updated_at || new Date().toISOString(),
       };
 
       setUser(user);

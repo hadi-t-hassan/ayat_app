@@ -104,8 +104,12 @@ fi
 # Activate virtual environment and install dependencies
 echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
 source $PROJECT_DIR/venv/bin/activate
-pip install --upgrade pip
+pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
+
+# Fix pkg_resources issue
+echo -e "${YELLOW}🔧 Fixing pkg_resources issue...${NC}"
+pip install --upgrade setuptools
 
 # Create production .env file
 echo -e "${YELLOW}⚙️ Creating production environment file...${NC}"
