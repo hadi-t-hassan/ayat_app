@@ -13,7 +13,7 @@ import { Calendar as CalendarIcon, Clock, Plus, Edit, Trash2, X, CheckCircle, XC
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { apiGet, apiPost, apiPatch, apiDelete } from '@/utils/api';
+import { apiGet, apiPost, apiPatch, apiDelete, apiDownloadFile, apiUploadFile } from '@/utils/api';
 import { UniversalShare } from '@/components/UniversalShare';
 
 // Types
@@ -558,27 +558,8 @@ export default function ManageEvents() {
 
   const handleDownloadSample = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/events/import/sample/', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to download sample file');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'events_import_template.xlsx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
+      await apiDownloadFile('/events/import/sample/', 'events_import_template.xlsx');
+      
       toast({
         title: t.downloadSample,
         description: "Sample Excel template downloaded successfully",
@@ -612,38 +593,23 @@ export default function ManageEvents() {
 
     setImporting(true);
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
+      const response = await apiUploadFile('/events/import/', selectedFile);
 
-      const response = await fetch('http://localhost:8000/api/events/import/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: t.importSuccessful,
-          description: data.message,
-        });
-        
-        // Refresh events list
-        await fetchEvents();
-        
-        // Close dialog and reset
-        setImportDialogOpen(false);
-        setSelectedFile(null);
-      } else {
-        toast({
-          title: t.importFailed,
-          description: data.error || "Failed to import events",
-          variant: "destructive",
-        });
+      if (response.error) {
+        throw new Error(response.error);
       }
+
+      toast({
+        title: t.importSuccessful,
+        description: response.data?.message || "Events imported successfully",
+      });
+      
+      // Refresh events list
+      await fetchEvents();
+      
+      // Close dialog and reset
+      setImportDialogOpen(false);
+      setSelectedFile(null);
     } catch (error) {
       toast({
         title: "Import Failed",

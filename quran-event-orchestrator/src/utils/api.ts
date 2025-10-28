@@ -202,3 +202,86 @@ export const apiPatch = <T = any>(url: string, data: any): Promise<ApiResponse<T
 export const apiDelete = <T = any>(url: string): Promise<ApiResponse<T>> => {
   return authenticatedRequest<T>(url, { method: 'DELETE' });
 };
+
+/**
+ * Download a file from the API
+ */
+export const apiDownloadFile = async (url: string, filename?: string): Promise<void> => {
+  const token = localStorage.getItem('access_token');
+  
+  if (!token) {
+    window.location.href = '/auth';
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download file');
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename || 'download';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload a file to the API
+ */
+export const apiUploadFile = async <T = any>(url: string, file: File, additionalData?: Record<string, any>): Promise<ApiResponse<T>> => {
+  const token = localStorage.getItem('access_token');
+  
+  if (!token) {
+    window.location.href = '/auth';
+    return { error: 'No access token', status: 401 };
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    if (additionalData) {
+      Object.entries(additionalData).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+    }
+
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    let data = null;
+    let error = undefined;
+
+    if (response.ok) {
+      data = await response.json();
+    } else {
+      const errorText = await response.text();
+      error = `HTTP ${response.status}: ${errorText}`;
+    }
+
+    return { data, error, status: response.status };
+  } catch (error) {
+    return { error: `Network error: ${error}`, status: 0 };
+  }
+};
