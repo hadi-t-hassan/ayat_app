@@ -2,7 +2,6 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from . import language_views
-from . import superuser_views
 
 urlpatterns = [
     # Authentication
@@ -23,9 +22,4 @@ urlpatterns = [
     path('language/set/', language_views.set_language, name='set_language'),
     path('language/get/', language_views.get_language, name='get_language'),
     path('language/available/', language_views.get_available_languages, name='available_languages'),
-    
-    # Superuser Management
-    path('superuser/set-permissions/', superuser_views.set_superuser_permissions, name='set_superuser_permissions'),
-    path('superuser/get-permissions/', superuser_views.get_user_permissions, name='get_user_permissions'),
-    path('superuser/update-permissions/', superuser_views.update_user_permissions, name='update_user_permissions'),
 ]

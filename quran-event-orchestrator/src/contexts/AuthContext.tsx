@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { isAdmin, isSuperUser, hasPermission, canAccessPage, getUserPermissions } from '@/utils/permissions';
 
 // API base URL
 const API_BASE_URL = '/api';
@@ -36,12 +35,6 @@ interface AuthContextType {
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
   refreshToken: () => Promise<boolean>;
   isTokenExpired: () => boolean;
-  // Permission methods
-  isAdmin: () => boolean;
-  isSuperUser: () => boolean;
-  hasPermission: (permission: string) => boolean;
-  canAccessPage: (page: string) => boolean;
-  getUserPermissions: () => string[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -303,12 +296,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateProfile,
     refreshToken,
     isTokenExpired,
-    // Permission methods
-    isAdmin: () => isAdmin(user, profile),
-    isSuperUser: () => isSuperUser(user, profile),
-    hasPermission: (permission: string) => hasPermission(user, profile, permission),
-    canAccessPage: (page: string) => canAccessPage(user, profile, page),
-    getUserPermissions: () => getUserPermissions(user, profile),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
