@@ -15,7 +15,8 @@ import {
   Filter,
   Edit3,
   Check,
-  X
+  X,
+  Globe
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
