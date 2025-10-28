@@ -17,12 +17,17 @@ export const usePermissions = () => {
   const hasPermission = (pageId: string): boolean => {
     if (!profile) return false;
     
+    // Admin users have access to all pages
+    if (profile.role === 'admin') {
+      return true;
+    }
+    
     // If user has no permissions set, give them dashboard access by default
     if (!profile.permissions || Object.keys(profile.permissions).length === 0) {
       return pageId === 'dashboard';
     }
     
-    // Check user permissions (both admin and user roles respect their specific permissions)
+    // Check user permissions for non-admin users
     return profile.permissions && profile.permissions[pageId];
   };
 
@@ -31,12 +36,17 @@ export const usePermissions = () => {
     
     const availablePagesConfig = getAvailablePagesConfig(t);
     
+    // Admin users see all pages
+    if (profile.role === 'admin') {
+      return availablePagesConfig;
+    }
+    
     // If user has no permissions set, give them dashboard access by default
     if (!profile.permissions || Object.keys(profile.permissions).length === 0) {
       return availablePagesConfig.filter(page => page.id === 'dashboard');
     }
     
-    // Both admin and user roles see only pages they have permission for
+    // Non-admin users see only pages they have permission for
     return availablePagesConfig.filter(page => hasPermission(page.id));
   };
 
