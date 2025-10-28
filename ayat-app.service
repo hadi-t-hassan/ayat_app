@@ -1,0 +1,34 @@
+[Unit]
+Description=Ayat Events Management uWSGI App
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/home/ayat_app/backend
+Environment=DJANGO_SETTINGS_MODULE=quran_events_backend.settings_production
+Environment=PYTHONPATH=/home/ayat_app/backend
+ExecStart=/usr/local/bin/uwsgi --ini /home/ayat_app/backend/uwsgi.ini
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=3
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/ayat_app/backend
+ReadWritePaths=/var/log/uwsgi
+ReadWritePaths=/tmp
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
