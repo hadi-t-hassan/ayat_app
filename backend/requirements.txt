@@ -6,3 +6,26 @@ python-decouple==3.8
 Pillow==10.4.0
 openpyxl==3.1.2
 mysqlclient==2.2.4
+
+# Production server
+gunicorn==21.2.0
+
+# Database optimization
+django-extensions==3.2.3
+
+# Security
+django-ratelimit==4.1.0
+
+# Monitoring and logging
+sentry-sdk==1.38.0
+
+# Caching (optional)
+redis==5.0.1
+django-redis==5.4.0
+
+# Email (if using SMTP)
+django-anymail==10.2
+
+# File storage (if using cloud storage)
+boto3==1.34.0
+django-storages==1.14.2

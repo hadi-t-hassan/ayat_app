@@ -62,12 +62,18 @@ pip3 install uwsgi
 echo -e "${YELLOW}🗄️ Configuring MySQL...${NC}"
 mysql_secure_installation
 
-# Create MySQL database and user
-echo -e "${YELLOW}🗄️ Creating MySQL database and user...${NC}"
-mysql -e "CREATE DATABASE IF NOT EXISTS ayat_events CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -e "CREATE USER IF NOT EXISTS 'ayat_user'@'localhost' IDENTIFIED BY 'your_secure_password';"
-mysql -e "GRANT ALL PRIVILEGES ON ayat_events.* TO 'ayat_user'@'localhost';"
-mysql -e "FLUSH PRIVILEGES;"
+# Check if database already exists and skip creation if it does
+echo -e "${YELLOW}🗄️ Checking if database already exists...${NC}"
+if mysql -e "USE ayat_events;" 2>/dev/null; then
+    echo -e "${GREEN}✅ Database 'ayat_events' already exists. Skipping database creation.${NC}"
+    echo -e "${YELLOW}⚠️  Make sure your .env file has the correct database credentials.${NC}"
+else
+    echo -e "${YELLOW}🗄️ Creating MySQL database and user...${NC}"
+    mysql -e "CREATE DATABASE IF NOT EXISTS ayat_events CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    mysql -e "CREATE USER IF NOT EXISTS 'ayat_user'@'localhost' IDENTIFIED BY 'your_secure_password';"
+    mysql -e "GRANT ALL PRIVILEGES ON ayat_events.* TO 'ayat_user'@'localhost';"
+    mysql -e "FLUSH PRIVILEGES;"
+fi
 
 # Create project directory
 echo -e "${YELLOW}📁 Creating project directory...${NC}"
