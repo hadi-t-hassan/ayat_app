@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Ayat Events Management - Production Deployment Script
+# Ayat Events Management - Production Deployment Script (Root Version)
 # For VPS deployment with Nginx, uWSGI, and SSL
 
 set -e
@@ -20,34 +20,17 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 Ayat Events Management - Production Deployment${NC}"
+echo -e "${GREEN}🚀 Ayat Events Management - Production Deployment (Root)${NC}"
 echo -e "${BLUE}📁 Project Directory: $PROJECT_DIR${NC}"
 echo -e "${BLUE}🌐 Domain: $DOMAIN${NC}"
 
-# Check if running as root
-if [ "$EUID" -eq 0 ]; then
-    echo -e "${YELLOW}⚠️  Running as root. This is not recommended for security reasons.${NC}"
-    echo -e "${YELLOW}   Consider creating a regular user with sudo privileges instead.${NC}"
-    read -p "Do you want to continue as root? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${RED}❌ Deployment cancelled. Please create a regular user and run the script as that user.${NC}"
-        exit 1
-    fi
-    echo -e "${YELLOW}⚠️  Continuing as root...${NC}"
-fi
-
 # Update system packages
 echo -e "${YELLOW}📦 Updating system packages...${NC}"
-if [ "$EUID" -eq 0 ]; then
-    apt update && apt upgrade -y
-else
-    sudo apt update && sudo apt upgrade -y
-fi
+apt update && apt upgrade -y
 
 # Install essential packages
 echo -e "${YELLOW}📦 Installing essential packages...${NC}"
-sudo apt install -y \
+apt install -y \
     nginx \
     mysql-server \
     python3 \
@@ -68,28 +51,27 @@ sudo apt install -y \
 
 # Install Node.js 18.x
 echo -e "${YELLOW}📦 Installing Node.js 18.x...${NC}"
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
 
 # Install uWSGI
 echo -e "${YELLOW}📦 Installing uWSGI...${NC}"
-sudo pip3 install uwsgi
+pip3 install uwsgi
 
 # Configure MySQL
 echo -e "${YELLOW}🗄️ Configuring MySQL...${NC}"
-sudo mysql_secure_installation
+mysql_secure_installation
 
 # Create MySQL database and user
 echo -e "${YELLOW}🗄️ Creating MySQL database and user...${NC}"
-sudo mysql -e "CREATE DATABASE IF NOT EXISTS ayat_events CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-sudo mysql -e "CREATE USER IF NOT EXISTS 'ayat_user'@'localhost' IDENTIFIED BY 'your_secure_password';"
-sudo mysql -e "GRANT ALL PRIVILEGES ON ayat_events.* TO 'ayat_user'@'localhost';"
-sudo mysql -e "FLUSH PRIVILEGES;"
+mysql -e "CREATE DATABASE IF NOT EXISTS ayat_events CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -e "CREATE USER IF NOT EXISTS 'ayat_user'@'localhost' IDENTIFIED BY 'your_secure_password';"
+mysql -e "GRANT ALL PRIVILEGES ON ayat_events.* TO 'ayat_user'@'localhost';"
+mysql -e "FLUSH PRIVILEGES;"
 
 # Create project directory
 echo -e "${YELLOW}📁 Creating project directory...${NC}"
-sudo mkdir -p $PROJECT_DIR
-sudo chown $USER:$USER $PROJECT_DIR
+mkdir -p $PROJECT_DIR
 
 # Clone or update repository
 if [ -d "$PROJECT_DIR/.git" ]; then
@@ -184,62 +166,60 @@ cp -r $FRONTEND_DIR/dist/* $FRONTEND_BUILD_DIR/
 
 # Create necessary directories
 echo -e "${YELLOW}📁 Creating necessary directories...${NC}"
-sudo mkdir -p /var/log/uwsgi
-sudo mkdir -p /var/log/ayat_app
-sudo chown -R $USER:$USER /var/log/uwsgi
-sudo chown -R $USER:$USER /var/log/ayat_app
+mkdir -p /var/log/uwsgi
+mkdir -p /var/log/ayat_app
 
 # Configure uWSGI
 echo -e "${YELLOW}⚙️ Configuring uWSGI...${NC}"
-sudo cp $BACKEND_DIR/uwsgi.ini /etc/uwsgi/apps-available/ayat_app.ini
-sudo ln -sf /etc/uwsgi/apps-available/ayat_app.ini /etc/uwsgi/apps-enabled/
+cp $BACKEND_DIR/uwsgi.ini /etc/uwsgi/apps-available/ayat_app.ini
+ln -sf /etc/uwsgi/apps-available/ayat_app.ini /etc/uwsgi/apps-enabled/
 
 # Configure systemd service
 echo -e "${YELLOW}⚙️ Configuring systemd service...${NC}"
-sudo cp $PROJECT_DIR/ayat-app.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable ayat-app
+cp $PROJECT_DIR/ayat-app.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable ayat-app
 
 # Configure Nginx
 echo -e "${YELLOW}🌐 Configuring Nginx...${NC}"
-sudo cp $PROJECT_DIR/nginx_ayat.conf /etc/nginx/sites-available/$DOMAIN
-sudo ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
+cp $PROJECT_DIR/nginx_ayat.conf /etc/nginx/sites-available/$DOMAIN
+ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
 
 # Test Nginx configuration
-sudo nginx -t
+nginx -t
 
 # Install Certbot for SSL
 echo -e "${YELLOW}🔒 Installing Certbot for SSL...${NC}"
-sudo apt install -y certbot python3-certbot-nginx
+apt install -y certbot python3-certbot-nginx
 
 # Get SSL certificate
 echo -e "${YELLOW}🔒 Obtaining SSL certificate...${NC}"
-sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
+certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
 
 # Set proper permissions
 echo -e "${YELLOW}🔐 Setting permissions...${NC}"
-sudo chown -R www-data:www-data $PROJECT_DIR
-sudo chmod -R 755 $PROJECT_DIR
-sudo chmod +x $BACKEND_DIR/uwsgi.ini
+chown -R www-data:www-data $PROJECT_DIR
+chmod -R 755 $PROJECT_DIR
+chmod +x $BACKEND_DIR/uwsgi.ini
 
 # Start services
 echo -e "${YELLOW}🔄 Starting services...${NC}"
-sudo systemctl start ayat-app
-sudo systemctl restart nginx
+systemctl start ayat-app
+systemctl restart nginx
 
 # Enable services to start on boot
-sudo systemctl enable ayat-app
-sudo systemctl enable nginx
+systemctl enable ayat-app
+systemctl enable nginx
 
 # Check service status
 echo -e "${YELLOW}📊 Checking service status...${NC}"
-sudo systemctl status ayat-app --no-pager
-sudo systemctl status nginx --no-pager
+systemctl status ayat-app --no-pager
+systemctl status nginx --no-pager
 
 # Setup log rotation
 echo -e "${YELLOW}📝 Setting up log rotation...${NC}"
-sudo tee /etc/logrotate.d/ayat_app > /dev/null << EOF
+cat > /etc/logrotate.d/ayat_app << EOF
 /var/log/ayat_app/*.log {
     daily
     missingok
@@ -269,24 +249,24 @@ EOF
 
 # Setup firewall
 echo -e "${YELLOW}🔥 Configuring firewall...${NC}"
-sudo ufw allow 22/tcp
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw --force enable
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
 
 # Setup automatic SSL renewal
 echo -e "${YELLOW}🔄 Setting up automatic SSL renewal...${NC}"
-sudo systemctl enable certbot.timer
-sudo systemctl start certbot.timer
+systemctl enable certbot.timer
+systemctl start certbot.timer
 
 # Final status check
 echo -e "${YELLOW}📊 Final status check...${NC}"
 echo -e "${BLUE}Backend Status:${NC}"
-sudo systemctl is-active ayat-app
+systemctl is-active ayat-app
 echo -e "${BLUE}Nginx Status:${NC}"
-sudo systemctl is-active nginx
+systemctl is-active nginx
 echo -e "${BLUE}MySQL Status:${NC}"
-sudo systemctl is-active mysql
+systemctl is-active mysql
 
 echo -e "${GREEN}✅ Deployment completed successfully!${NC}"
 echo -e "${GREEN}🌐 Your application is now available at: https://$DOMAIN${NC}"
