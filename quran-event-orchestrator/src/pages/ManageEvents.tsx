@@ -112,6 +112,8 @@ export default function ManageEvents() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [eventForm, setEventForm] = useState({
     day: '',
@@ -468,6 +470,22 @@ export default function ManageEvents() {
     }
     return 0;
   });
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(sortedEvents.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedEvents = sortedEvents.slice(startIndex, startIndex + pageSize);
+
+  // Reset or clamp page when data set or page size changes
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize, sortedEvents.length]);
 
   const clearFilters = () => {
     setFilters({
@@ -1155,7 +1173,6 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
                     value={eventForm.duration}
                     onChange={(e) => setEventForm({ ...eventForm, duration: e.target.value })}
                     min="1"
-                    max="480"
                     className={isRTL ? 'text-right' : 'text-left'}
                   />
                 </div>
@@ -1757,7 +1774,8 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
+            <>
+              <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1944,7 +1962,7 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
                       </TableCell>
                     </TableRow>
                   ) : (
-                    sortedEvents.map((event) => (
+                    paginatedEvents.map((event) => (
                       <TableRow key={event.id}>
                         <TableCell>
                             <p className="font-medium">{event.day}</p>
@@ -2143,6 +2161,53 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
                 </TableBody>
               </Table>
             </div>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-3">
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                {sortedEvents.length === 0 ? (
+                  <span>Showing 0 of 0</span>
+                ) : (
+                  <span>{`Showing ${startIndex + 1}-${Math.min(startIndex + pageSize, sortedEvents.length)} of ${sortedEvents.length}`}</span>
+                )}
+              </div>
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs sm:text-sm text-muted-foreground">Rows</Label>
+                  <Select value={String(pageSize)} onValueChange={(v) => setPageSize(parseInt(v))}>
+                    <SelectTrigger className="h-8 w-[90px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Prev
+                  </Button>
+                  <span className="text-xs sm:text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
