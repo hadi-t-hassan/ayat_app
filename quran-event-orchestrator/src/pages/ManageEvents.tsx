@@ -155,11 +155,27 @@ export default function ManageEvents() {
       let nextUrl: string | null = '/events/';
 
       while (nextUrl) {
-        const response = await apiGet(nextUrl);
+        // Normalize absolute URLs from API pagination to relative paths for our api helper
+        let requestUrl = nextUrl;
+        if (/^https?:\/\//i.test(nextUrl)) {
+          try {
+            const u = new URL(nextUrl);
+            requestUrl = `${u.pathname}${u.search}` || '/events/';
+          } catch (_) {
+            requestUrl = '/events/';
+          }
+        }
+
+        const response = await apiGet(requestUrl);
         if (response.error) {
           throw new Error(response.error);
         }
         const data = response.data;
+
+        // Guard for unexpected HTML (e.g., 301/302 to index.html or error pages)
+        if (typeof data === 'string' && /^\s*<!doctype/i.test(data)) {
+          throw new Error('Unexpected HTML response while fetching events');
+        }
 
         if (data && Array.isArray(data.results)) {
           aggregated = aggregated.concat(data.results);
