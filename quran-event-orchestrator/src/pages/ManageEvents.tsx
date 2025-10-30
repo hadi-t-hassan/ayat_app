@@ -1623,12 +1623,12 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
               </div>
               <div className="space-y-2">
                 <Label htmlFor="filter-participation">Participation Type</Label>
-                <Select value={filters.participation_type} onValueChange={(value) => setFilters(prev => ({ ...prev, participation_type: value }))}>
+                <Select value={filters.participation_type || undefined} onValueChange={(value) => setFilters(prev => ({ ...prev, participation_type: value === '__all__' ? '' : value }))}>
                   <SelectTrigger id="filter-participation">
                     <SelectValue placeholder="All participation types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All participation types</SelectItem>
+                    <SelectItem value="__all__">All participation types</SelectItem>
                     {Array.from(new Set(events.map(e => e.participation_type).filter(Boolean)))
                       .map((val) => (
                         <SelectItem key={`pt-${val}`} value={String(val)}>{String(val)}</SelectItem>
@@ -1638,12 +1638,12 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
               </div>
               <div className="space-y-2">
                 <Label htmlFor="filter-reason">Event Reason</Label>
-                <Select value={filters.event_reason} onValueChange={(value) => setFilters(prev => ({ ...prev, event_reason: value }))}>
+                <Select value={filters.event_reason || undefined} onValueChange={(value) => setFilters(prev => ({ ...prev, event_reason: value === '__all__' ? '' : value }))}>
                   <SelectTrigger id="filter-reason">
                     <SelectValue placeholder="All reasons" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All reasons</SelectItem>
+                    <SelectItem value="__all__">All reasons</SelectItem>
                     {Array.from(new Set(events.map(e => e.event_reason).filter(Boolean)))
                       .map((val) => (
                         <SelectItem key={`er-${val}`} value={String(val)}>{String(val)}</SelectItem>
