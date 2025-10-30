@@ -150,26 +150,30 @@ export default function ManageEvents() {
 
   const fetchEvents = async () => {
     try {
-      const response = await apiGet('/events/');
-      
-      if (response.error) {
-        throw new Error(response.error);
+      // Fetch all pages to ensure all events are displayed
+      let aggregated: Event[] = [];
+      let nextUrl: string | null = '/events/';
+
+      while (nextUrl) {
+        const response = await apiGet(nextUrl);
+        if (response.error) {
+          throw new Error(response.error);
+        }
+        const data = response.data;
+
+        if (data && Array.isArray(data.results)) {
+          aggregated = aggregated.concat(data.results);
+          nextUrl = data.next || null;
+        } else if (Array.isArray(data)) {
+          aggregated = aggregated.concat(data);
+          nextUrl = null;
+        } else {
+          console.error('Expected array or paginated response but got:', typeof data, data);
+          nextUrl = null;
+        }
       }
 
-      const data = response.data;
-      console.log('Fetched events from API:', data);
-      
-      // Handle paginated response - extract results array
-      if (data && data.results && Array.isArray(data.results)) {
-        console.log('Setting events from paginated response:', data.results);
-        setEvents(data.results);
-      } else if (Array.isArray(data)) {
-        console.log('Setting events from direct array:', data);
-        setEvents(data);
-      } else {
-        console.error('Expected array or paginated response but got:', typeof data, data);
-        setEvents([]);
-      }
+      setEvents(aggregated);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
