@@ -61,8 +61,13 @@ export const TRANSLATION_CATEGORIES: Record<string, TranslationCategory> = {
   dashboard: {
     title: 'Dashboard',
     keys: [
-      'noUpcomingParties', 'noPartiesScheduled', 'noPartiesDescription', 'allPartiesInSystem',
-      'registeredSystemUsers', 'eventPurpose', 'meetingDetails'
+      'noUpcomingParties', 'noPartiesScheduled', 'noPartiesDescription',
+      'nearestParty', 'nearestEvent', 'dateAndTime', 'location', 'expectedParticipants', 'people',
+      'events', 'users', 'allPartiesInSystem', 'registeredSystemUsers',
+      'confirmed', 'pending', 'completed', 'cancelled',
+      'eventStatusOverview', 'currentStatusDistribution',
+      'readyToProceed', 'awaitingConfirmation',
+      'eventPurpose', 'meetingDetails'
     ]
   }
 };

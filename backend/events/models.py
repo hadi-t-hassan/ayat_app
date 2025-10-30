@@ -20,7 +20,7 @@ class Event(models.Model):
     time = models.TimeField(help_text="Event start time")
     duration = models.PositiveIntegerField(
         help_text="Duration in minutes",
-        validators=[MinValueValidator(30), MaxValueValidator(480)]
+        validators=[MinValueValidator(1), MaxValueValidator(480)]
     )
     place = models.CharField(max_length=200, help_text="Event location")
     number_of_participants = models.PositiveIntegerField(

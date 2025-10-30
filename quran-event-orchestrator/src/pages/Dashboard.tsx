@@ -264,7 +264,7 @@ export default function Dashboard() {
                 </div>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <h3 className="text-2xl font-bold">{nearestEvent.day} {t.event}</h3>
-                  <p className="text-white/90 text-sm">{t.organizedBy} {nearestEvent.created_by_name || 'System'}</p>
+                  <p className="text-white/90 text-sm">{t.organizedBy} {nearestEvent.created_by_name || t.system}</p>
                 </div>
               </div>
               

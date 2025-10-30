@@ -45,6 +45,7 @@ interface Translations {
   nearestEvent: string;
   party: string;
   event: string;
+  system: string;
   organizedBy: string;
   dateAndTime: string;
   at: string;
@@ -204,6 +205,7 @@ const enTranslations: Translations = {
   nearestEvent: 'Nearest Event',
   party: 'Party',
   event: 'Event',
+  system: 'System',
   organizedBy: 'Organized by',
   dateAndTime: 'Date & Time',
   at: 'at',
@@ -363,6 +365,7 @@ const arTranslations: Translations = {
   nearestEvent: 'أقرب فعالية',
   party: 'حفلة',
   event: 'فعالية',
+  system: 'النظام',
   organizedBy: 'منظم بواسطة',
   dateAndTime: 'التاريخ والوقت',
   at: 'في',

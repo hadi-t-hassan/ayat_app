@@ -89,8 +89,12 @@ export default function ManageEvents() {
     event_reason: '',
     status: 'all',
     meeting_date: '',
+    meeting_time: '',
+    meeting_place: '',
     vehicle: '',
-    camera_man: ''
+    camera_man: '',
+    duration: '',
+    number_of_participants: ''
   });
   const [showFilters, setShowFilters] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
@@ -389,8 +393,12 @@ export default function ManageEvents() {
       (!filters.event_reason || (event.event_reason && event.event_reason.toLowerCase().includes(filters.event_reason.toLowerCase()))) &&
       (!filters.status || filters.status === 'all' || event.status.toLowerCase().includes(filters.status.toLowerCase())) &&
       (!filters.meeting_date || (event.meeting_date && formatDate(event.meeting_date).includes(filters.meeting_date))) &&
+      (!filters.meeting_time || (event.meeting_time && event.meeting_time.includes(filters.meeting_time))) &&
+      (!filters.meeting_place || (event.place_of_meeting && event.place_of_meeting.toLowerCase().includes(filters.meeting_place.toLowerCase()))) &&
       (!filters.vehicle || (event.vehicle && event.vehicle.toLowerCase().includes(filters.vehicle.toLowerCase()))) &&
-      (!filters.camera_man || (event.camera_man && event.camera_man.toLowerCase().includes(filters.camera_man.toLowerCase())))
+      (!filters.camera_man || (event.camera_man && event.camera_man.toLowerCase().includes(filters.camera_man.toLowerCase()))) &&
+      (!filters.duration || event.duration.toString().includes(filters.duration)) &&
+      (!filters.number_of_participants || event.number_of_participants.toString().includes(filters.number_of_participants))
     );
 
     return globalSearchMatch && fieldFiltersMatch && dateRangeMatch;
@@ -995,12 +1003,12 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
           return timeStr + ':00';
         };
 
-        // Validate duration (minimum 30 minutes)
+        // Validate duration (must be positive)
         const duration = parseInt(eventForm.duration);
-        if (duration < 30) {
+        if (!Number.isFinite(duration) || duration <= 0) {
           toast({
             title: "Invalid Duration",
-            description: "Duration must be at least 30 minutes",
+            description: "Duration must be a positive number",
             variant: "destructive",
           });
           return;
@@ -1143,10 +1151,10 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
                   <Input
                     id="duration"
                     type="number"
-                    placeholder="e.g., 120 (minimum 30)"
+                    placeholder="e.g., 120 (positive minutes)"
                     value={eventForm.duration}
                     onChange={(e) => setEventForm({ ...eventForm, duration: e.target.value })}
-                    min="30"
+                    min="1"
                     max="480"
                     className={isRTL ? 'text-right' : 'text-left'}
                   />
@@ -1615,21 +1623,33 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
               </div>
               <div className="space-y-2">
                 <Label htmlFor="filter-participation">Participation Type</Label>
-                <Input
-                  id="filter-participation"
-                  placeholder="Filter by participation..."
-                  value={filters.participation_type}
-                  onChange={(e) => setFilters(prev => ({ ...prev, participation_type: e.target.value }))}
-                />
+                <Select value={filters.participation_type} onValueChange={(value) => setFilters(prev => ({ ...prev, participation_type: value }))}>
+                  <SelectTrigger id="filter-participation">
+                    <SelectValue placeholder="All participation types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All participation types</SelectItem>
+                    {Array.from(new Set(events.map(e => e.participation_type).filter(Boolean)))
+                      .map((val) => (
+                        <SelectItem key={`pt-${val}`} value={String(val)}>{String(val)}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="filter-reason">Event Reason</Label>
-                <Input
-                  id="filter-reason"
-                  placeholder="Filter by reason..."
-                  value={filters.event_reason}
-                  onChange={(e) => setFilters(prev => ({ ...prev, event_reason: e.target.value }))}
-                />
+                <Select value={filters.event_reason} onValueChange={(value) => setFilters(prev => ({ ...prev, event_reason: value }))}>
+                  <SelectTrigger id="filter-reason">
+                    <SelectValue placeholder="All reasons" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All reasons</SelectItem>
+                    {Array.from(new Set(events.map(e => e.event_reason).filter(Boolean)))
+                      .map((val) => (
+                        <SelectItem key={`er-${val}`} value={String(val)}>{String(val)}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="filter-status">Status</Label>
@@ -1656,6 +1676,24 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="filter-meeting-time">Meeting Time</Label>
+                <Input
+                  id="filter-meeting-time"
+                  placeholder="Filter by meeting time..."
+                  value={filters.meeting_time}
+                  onChange={(e) => setFilters(prev => ({ ...prev, meeting_time: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="filter-meeting-place">Meeting Place</Label>
+                <Input
+                  id="filter-meeting-place"
+                  placeholder="Filter by meeting place..."
+                  value={filters.meeting_place}
+                  onChange={(e) => setFilters(prev => ({ ...prev, meeting_place: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="filter-vehicle">Vehicle</Label>
                 <Input
                   id="filter-vehicle"
@@ -1671,6 +1709,24 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
                   placeholder="Filter by camera man..."
                   value={filters.camera_man}
                   onChange={(e) => setFilters(prev => ({ ...prev, camera_man: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="filter-duration">Duration</Label>
+                <Input
+                  id="filter-duration"
+                  placeholder="Filter by duration..."
+                  value={filters.duration}
+                  onChange={(e) => setFilters(prev => ({ ...prev, duration: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="filter-participants">Participants</Label>
+                <Input
+                  id="filter-participants"
+                  placeholder="Filter by participants..."
+                  value={filters.number_of_participants}
+                  onChange={(e) => setFilters(prev => ({ ...prev, number_of_participants: e.target.value }))}
                 />
               </div>
               </div>
@@ -2348,14 +2404,18 @@ ${event.dress_details && event.dress_details.length > 0 ? `- Dress: ${event.dres
                     <span>Dress Details</span>
                   </h3>
                   <div className="grid gap-2">
-                    {eventToView.dress_details.map((detail, index) => (
-                      <div key={index} className="p-3 bg-background border rounded-lg flex items-center space-x-3">
-                        <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-sm font-bold">
-                          {index + 1}
+                    {eventToView.dress_details.map((detail, index) => {
+                      const labels = [t.pants, t.shirt, t.coat, t.shoes, t.whip, t.socks, t.accessories];
+                      const label = labels[index] || `${t.shirt}`;
+                      return (
+                        <div key={index} className="p-3 bg-background border rounded-lg flex items-center space-x-3">
+                          <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-sm font-bold">
+                            {index + 1}
+                          </div>
+                          <p className="text-base font-medium">{label}: {detail.description}</p>
                         </div>
-                        <p className="text-base font-medium">{detail.description}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

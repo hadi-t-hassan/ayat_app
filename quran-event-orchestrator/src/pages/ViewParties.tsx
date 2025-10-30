@@ -667,14 +667,18 @@ Updated: ${formatDate(event.updated_at)}
                     <span>Dress Details</span>
                   </h3>
                   <div className="grid gap-2">
-                    {eventToView.dress_details.map((detail, index) => (
-                      <div key={index} className={`p-3 bg-background border rounded-lg flex items-center space-x-3 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                        <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-sm font-bold">
-                          {index + 1}
+                    {eventToView.dress_details.map((detail, index) => {
+                      const labels = [t.pants, t.shirt, t.coat, t.shoes, t.whip, t.socks, t.accessories];
+                      const label = labels[index] || `${t.shirt}`;
+                      return (
+                        <div key={index} className={`p-3 bg-background border rounded-lg flex items-center space-x-3 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                          <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-sm font-bold">
+                            {index + 1}
+                          </div>
+                          <p className={`text-base font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{label}: {detail.description}</p>
                         </div>
-                        <p className={`text-base font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{detail.description}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
