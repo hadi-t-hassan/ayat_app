@@ -160,7 +160,10 @@ export default function ManageEvents() {
         if (/^https?:\/\//i.test(nextUrl)) {
           try {
             const u = new URL(nextUrl);
-            requestUrl = `${u.pathname}${u.search}` || '/events/';
+            const pathWithQuery = `${u.pathname}${u.search}` || '/events/';
+            // If backend returns '/api/events/...' and our api helper already prefixes '/api',
+            // strip the leading '/api' to avoid '/api/api/...'
+            requestUrl = pathWithQuery.replace(/^\/api\//, '/');
           } catch (_) {
             requestUrl = '/events/';
           }
