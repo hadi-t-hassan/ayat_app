@@ -61,26 +61,56 @@ export default function ViewParties() {
       if (!token) {
         console.error('No access token found');
         setEvents([]);
+        setLoading(false);
         return;
       }
 
-      const response = await apiGet('/events/');
+      // Fetch all pages to ensure all events are displayed
+      let aggregated: Event[] = [];
+      let nextUrl: string | null = '/events/';
 
-      if (response.error) {
-        throw new Error(response.error);
+      while (nextUrl) {
+        // Normalize absolute URLs from API pagination to relative paths for our api helper
+        let requestUrl = nextUrl;
+        if (/^https?:\/\//i.test(nextUrl)) {
+          try {
+            const u = new URL(nextUrl);
+            const pathWithQuery = `${u.pathname}${u.search}` || '/events/';
+            // If backend returns '/api/events/...' and our api helper already prefixes '/api',
+            // strip the leading '/api' to avoid '/api/api/...'
+            requestUrl = pathWithQuery.replace(/^\/api\//, '/');
+          } catch (_) {
+            requestUrl = '/events/';
+          }
+        }
+
+        const response = await apiGet(requestUrl);
+        
+        if (response.error) {
+          throw new Error(response.error);
+        }
+        
+        const data = response.data;
+
+        // Guard for unexpected HTML (e.g., 301/302 to index.html or error pages)
+        if (typeof data === 'string' && /^\s*<!doctype/i.test(data)) {
+          throw new Error('Unexpected HTML response while fetching events');
+        }
+
+        // Handle paginated response - extract results array
+        if (data && data.results && Array.isArray(data.results)) {
+          aggregated = aggregated.concat(data.results);
+          nextUrl = data.next || null;
+        } else if (Array.isArray(data)) {
+          aggregated = aggregated.concat(data);
+          nextUrl = null;
+        } else {
+          console.error('Expected array or paginated response but got:', typeof data, data);
+          nextUrl = null;
+        }
       }
 
-      const data = response.data;
-      
-      // Handle paginated response - extract results array
-      if (data && data.results && Array.isArray(data.results)) {
-        setEvents(data.results);
-      } else if (Array.isArray(data)) {
-        setEvents(data);
-      } else {
-        console.error('Expected array or paginated response but got:', typeof data, data);
-        setEvents([]);
-      }
+      setEvents(aggregated);
     } catch (error) {
       console.error('Error fetching events:', error);
       setEvents([]);
