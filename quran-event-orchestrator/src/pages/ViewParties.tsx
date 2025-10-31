@@ -90,7 +90,16 @@ export default function ViewParties() {
   };
 
   const filterEventsByStatus = (status: string) => {
-    return events.filter(event => event.status === status);
+    if (!events || events.length === 0) return [];
+    
+    return events.filter(event => {
+      // Normalize status values for case-insensitive comparison and handle null/undefined
+      const eventStatus = (event.status || '').toLowerCase().trim();
+      const filterStatus = (status || '').toLowerCase().trim();
+      
+      // Return true if statuses match exactly
+      return eventStatus === filterStatus;
+    });
   };
 
   const sortEvents = (events: Event[]) => {
